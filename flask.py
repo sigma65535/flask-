@@ -581,6 +581,7 @@ class Flask(object):
             return self.response_class(*rv)
         return self.response_class.force_type(rv, request.environ)
 
+    # 预处理request请求，在实际的request请求分发之前调用
     def preprocess_request(self):
         """Called before the actual request dispatching and will
         call every as :meth:`before_request` decorated function.
@@ -593,6 +594,7 @@ class Flask(object):
             if rv is not None:
                 return rv
 
+    # 在发送到WSGI之前可以修改response对象。
     def process_response(self, response):
         """Can be overridden in order to modify the response object
         before it's sent to the WSGI server.  By default this will
@@ -609,6 +611,7 @@ class Flask(object):
             response = handler(response)
         return response
 
+    #WSGI应用，
     def wsgi_app(self, environ, start_response):
         """The actual WSGI application.  This is not implemented in
         `__call__` so that middlewares can be applied:
@@ -633,6 +636,8 @@ class Flask(object):
         it to the current context.  This must be used in combination with
         the `with` statement because the request is only bound to the
         current context for the duration of the `with` block.
+        在给定的环境中创建request上下文，并将并绑定到当前的上下文环境中，
+        必须使用with局来实现
 
         Example usage::
 
@@ -656,7 +661,9 @@ class Flask(object):
 
 
 # context locals
+# 调用werkzeug的自己实现的栈
 _request_ctx_stack = LocalStack()
+#通过werkzeug的代理类实现
 current_app = LocalProxy(lambda: _request_ctx_stack.top.app)
 request = LocalProxy(lambda: _request_ctx_stack.top.request)
 session = LocalProxy(lambda: _request_ctx_stack.top.session)
