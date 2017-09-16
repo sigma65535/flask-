@@ -60,6 +60,11 @@ class Response(ResponseBase):
 
     If you want to replace the response object used you can subclass this and
     set :attr:`~flask.Flask.request_class` to your subclass.
+    
+    """
+    """flask的默认response对象，其父类是Werkzeug的ResponseBase，
+        仅仅添加默认的mimetype设置，
+        通常情况下不必自己创建这个对象。make_response方法为你自动创建这个对象
     """
     default_mimetype = 'text/html'
 
