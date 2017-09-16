@@ -78,25 +78,29 @@ class _RequestContext(object):
     created at the beginning of the request and pushed to the
     `_request_ctx_stack` and removed at the end of it.  It will create the
     URL adapter and request object for the WSGI environment provided.
+
+    request上下文包含所有的request相关信息，在request请求发送前创建，并压入栈
+    _request_ctx_stack 中，在request请求结束后，从栈中移除。
+    并创建WSGI环境所需的URL适配器和request对象
     """
 
     def __init__(self, app, environ):
         self.app = app
-        self.url_adapter = app.url_map.bind_to_environ(environ)
-        self.request = app.request_class(environ)
+        self.url_adapter = app.url_map.bind_to_environ(environ)    # 创建URL适配器
+        self.request = app.request_class(environ)  # 为environ环境创建request对象
         self.session = app.open_session(self.request)
-        self.g = _RequestGlobals()
+        self.g = _RequestGlobals() #全局变量
         self.flashes = None
 
     def __enter__(self):
-        _request_ctx_stack.push(self)
+        _request_ctx_stack.push(self)   # with语句开始，入栈
 
     def __exit__(self, exc_type, exc_value, tb):
         # do not pop the request stack if we are in debug mode and an
         # exception happened.  This will allow the debugger to still
         # access the request object in the interactive shell.
         if tb is None or not self.app.debug:
-            _request_ctx_stack.pop()
+            _request_ctx_stack.pop()    # with语句结束，出栈
 
 
 def url_for(endpoint, **values):
@@ -513,7 +517,9 @@ class Flask(object):
             self.error_handlers[code] = f
             return f
         return decorator
-
+    
+    # 在每个request之前注册函数，
+    # 装饰器
     def before_request(self, f):
         """Registers a function to run before each request."""
         self.before_request_funcs.append(f)
@@ -558,6 +564,8 @@ class Flask(object):
                 raise
             return handler(e)
 
+    # 将视图函数的返回值转换成response对象
+    #response对象是属性response_class的实例
     def make_response(self, rv):
         """Converts the return value from a view function to a real
         response object that is an instance of :attr:`response_class`.
@@ -641,7 +649,8 @@ class Flask(object):
         it to the current context.  This must be used in combination with
         the `with` statement because the request is only bound to the
         current context for the duration of the `with` block.
-        在给定的环境中创建request上下文，并将并绑定到当前的上下文环境中，
+        
+        在给定的环境中创建request上下文，并将其绑定到当前的上下文环境中，
         必须使用with局来实现
 
         Example usage::
