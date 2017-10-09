@@ -45,6 +45,9 @@ class Request(RequestBase):
     the request object used you can subclass this and set
     :attr:`~flask.Flask.request_class` to your subclass.
     """
+    """flask的默认request对象。记录匹配的终端节点和视图参数
+    可以继承class Request来实现自己的request对象
+    """
 
     def __init__(self, environ):
         RequestBase.__init__(self, environ)
@@ -78,8 +81,9 @@ class _RequestContext(object):
     created at the beginning of the request and pushed to the
     `_request_ctx_stack` and removed at the end of it.  It will create the
     URL adapter and request object for the WSGI environment provided.
+    """
 
-    request上下文包含所有的request相关信息，在request请求发送前创建，并压入栈
+    """request上下文包含所有的request相关信息，在request请求发送前创建，并压入栈
     _request_ctx_stack 中，在request请求结束后，从栈中移除。
     并创建WSGI环境所需的URL适配器和request对象
     """
@@ -89,7 +93,7 @@ class _RequestContext(object):
         self.url_adapter = app.url_map.bind_to_environ(environ)    # 创建URL适配器
         self.request = app.request_class(environ)  # 为environ环境创建request对象
         self.session = app.open_session(self.request)
-        self.g = _RequestGlobals() #全局变量
+        self.g = _RequestGlobals()                  #全局变量
         self.flashes = None
 
     def __enter__(self):
@@ -109,6 +113,7 @@ def url_for(endpoint, **values):
     :param endpoint: the endpoint of the URL (name of the function)
     :param values: the variable arguments of the URL rule
     """
+    """为特定的终端节点生成URL"""
     return _request_ctx_stack.top.url_adapter.build(endpoint, values)
 
 
@@ -198,6 +203,10 @@ class Flask(object):
         from flask import Flask
         app = Flask(__name__)
     """
+    """flask对象实现了WSGI应用,并充当中央指挥官的作用，是Flask框架的核心。
+    其初始化时需要传入某块或包的名字。对象创建之后，负责视图函数,RUL功能，模板配置等
+    核心功能的注册 。
+    """
 
     #: the class that is used for request objects.  See :class:`~flask.request`
     #: for more information.
@@ -215,6 +224,8 @@ class Flask(object):
     #: if a secret key is set, cryptographic components can use this to
     #: sign cookies and other things.  Set this to a complex random value
     #: when you want to use the secure cookie for instance.
+    # 通过配置秘钥,可以用来标记cookies和其他东西。
+    # 可以设置一个复杂的随机值来实例化一个安全的cookies
     secret_key = None
 
     #: The secure cookie uses this for the name of the session cookie
@@ -236,6 +247,8 @@ class Flask(object):
 
         #: the name of the package or module.  Do not change this once
         #: it was set by the constructor.
+
+        #:当构造方法初始化self.package_name之后，不要更改这个值
         self.package_name = package_name
 
         #: where is the app root located?
@@ -245,6 +258,10 @@ class Flask(object):
         #: be function names which are also used to generate URLs and
         #: the values are the function objects themselves.
         #: to register a view function, use the :meth:`route` decorator.
+
+        #：记录已经注册的view函数。
+        #：key是函数的名字,通常用来生产URL，value是函数对象
+        #：使用route装饰器来注册view函数
         self.view_functions = {}
 
         #: a dictionary of all registered error handlers.  The key is
@@ -252,6 +269,9 @@ class Flask(object):
         #: should handle that error.
         #: To register a error handler, use the :meth:`errorhandler`
         #: decorator.
+        #：记录已经注册的错误处理器。
+        #：键是错误的编码(整数),值是错误处理函数
+        #：使用errorhandler装饰器注册错误处理器
         self.error_handlers = {}
 
         #: a list of functions that should be called at the beginning
@@ -518,7 +538,7 @@ class Flask(object):
             return f
         return decorator
     
-    # 在每个request之前注册函数，
+    # 在request请求之前运行的注册函数
     # 装饰器
     def before_request(self, f):
         """Registers a function to run before each request."""
