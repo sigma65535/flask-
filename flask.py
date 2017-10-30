@@ -167,7 +167,10 @@ def render_template_string(source, **context):
 def _default_template_ctx_processor():
     """Default template context processor.  Injects `request`,
     `session` and `g`.
+    默认的模板上下文处理器，注入`request`,`session` 和 `g`等变量.
+    实际就是返回一个字典，字典的key value是这三个变量
     """
+
     reqctx = _request_ctx_stack.top
     return dict(
         request=reqctx.request,
@@ -269,6 +272,7 @@ class Flask(object):
         #: should handle that error.
         #: To register a error handler, use the :meth:`errorhandler`
         #: decorator.
+
         #：记录已经注册的错误处理器。
         #：键是错误的编码(整数),值是错误处理函数
         #：使用errorhandler装饰器注册错误处理器
@@ -336,6 +340,10 @@ class Flask(object):
         :param context: the context as a dictionary that is updated in place
                         to add extra variables.
         """
+        """更新模板的上下文信息，此操作会将request，session，g等公用变量
+        注入到模板上下文中
+        :param context:
+        """
         reqctx = _request_ctx_stack.top
         for func in self.template_context_processors:
             context.update(func())
@@ -358,11 +366,12 @@ class Flask(object):
         options.setdefault('use_reloader', self.debug)
         options.setdefault('use_debugger', self.debug)
         return run_simple(host, port, self, **options)
-
+        
     def test_client(self):
         """Creates a test client for this application.  For information
         about unit testing head over to :ref:`testing`.
         """
+        """为程序创建客户端测试应用"""
         from werkzeug import Client
         return Client(self, self.response_class, use_cookies=True)
 
@@ -398,6 +407,9 @@ class Flask(object):
         :attr:`secret_key` is set.
 
         :param request: an instance of :attr:`request_class`.
+
+        创建或打开一个新的session。默认情况下，session数据存储在一个签名的cookie中，
+        前提条件是属性`secret_key`不为None
         """
         key = self.secret_key
         if key is not None:
@@ -412,6 +424,8 @@ class Flask(object):
                         :class:`~werkzeug.contrib.securecookie.SecureCookie`
                         object)
         :param response: an instance of :attr:`response_class`
+
+        保存session中更新的数据。session放在response对象中。
         """
         if session is not None:
             session.save_cookie(response, self.session_cookie_name)
@@ -440,11 +454,15 @@ class Flask(object):
         :param options: the options to be forwarded to the underlying
                         :class:`~werkzeug.routing.Rule` object
         """
+        """添加URL规则，Flask默认情况下会将view的函数名作为endpoint
+        """
         options['endpoint'] = endpoint
         options.setdefault('methods', ('GET',))
         self.url_map.add(Rule(rule, **options))
 
     def route(self, rule, **options):
+        """这是一个装饰器函数，通常用来为特定的URL规则注册一个视图函数
+        """
         """A decorator that is used to register a view function for a
         given URL rule.  Example::
 
@@ -510,12 +528,14 @@ class Flask(object):
                         :class:`~werkzeug.routing.Rule` object.
         """
         def decorator(f):
-            self.add_url_rule(rule, f.__name__, **options)
-            self.view_functions[f.__name__] = f
+            self.add_url_rule(rule, f.__name__, **options) # 添加URL规则
+            self.view_functions[f.__name__] = f  # 将视图函数f注册到view函数字典中
             return f
         return decorator
 
     def errorhandler(self, code):
+        """这是一个用来注册特定错误编码的装饰器
+        """
         """A decorator that is used to register a function give a given
         error code.  Example::
 
@@ -538,18 +558,20 @@ class Flask(object):
             return f
         return decorator
     
-    # 在request请求之前运行的注册函数
+    # 注册函数，使其在request请求之前运行
     # 装饰器
     def before_request(self, f):
         """Registers a function to run before each request."""
         self.before_request_funcs.append(f)
         return f
-
+    
+     # 注册函数，使其在request请求之后运行
     def after_request(self, f):
         """Register a function to be run after each request."""
         self.after_request_funcs.append(f)
         return f
-
+    
+    # 注册函数一个模板上下文处理器函数
     def context_processor(self, f):
         """Registers a template context processor function."""
         self.template_context_processors.append(f)
