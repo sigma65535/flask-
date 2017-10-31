@@ -123,6 +123,7 @@ def flash(message):
     the template has to call :func:`get_flashed_messages`.
 
     :param message: the message to be flashed.
+    message 信息存储在session中，也就是request上下文栈顶部
     """
     session['_flashes'] = (session.get('_flashes', [])) + [message]
 
@@ -131,6 +132,7 @@ def get_flashed_messages():
     """Pulls all flashed messages from the session and returns them.
     Further calls in the same request to the function will return
     the same messages.
+    获得flashes信息
     """
     flashes = _request_ctx_stack.top.flashes
     if flashes is None:
